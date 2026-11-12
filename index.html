@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Study Log | 공부 시간 기록</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --ink: #17243a;
+      --muted: #64748b;
+      --accent: #2563eb;
+      --accent-soft: #eff6ff;
+      --line: #e2e8f0;
+      --danger: #be123c;
+      --success: #047857;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+      line-height: 1.5;
+    }
+    .container { max-width: 850px; margin: 0 auto; padding: 40px 20px 64px; }
+    header { margin-bottom: 28px; }
+    .eyebrow { margin: 0 0 6px; color: var(--accent); font-weight: 800; letter-spacing: .08em; font-size: 13px; }
+    h1 { margin: 0; font-size: clamp(27px, 5vw, 36px); letter-spacing: -.04em; }
+    .subtitle { color: var(--muted); margin: 8px 0 0; font-size: 15px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 24px;
+      margin-bottom: 18px;
+      box-shadow: 0 5px 18px rgba(31, 50, 80, .035);
+    }
+    .card h2 { margin: 0 0 18px; font-size: 20px; letter-spacing: -.025em; }
+    label { display: block; margin-bottom: 7px; font-size: 14px; font-weight: 700; }
+    input {
+      width: 100%;
+      min-height: 48px;
+      padding: 10px 13px;
+      color: var(--ink);
+      font: inherit;
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+    }
+    input:focus-visible, button:focus-visible { outline: 3px solid #93c5fd; outline-offset: 2px; }
+    .date-row { max-width: 260px; }
+    .summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .stat { background: var(--accent-soft); border-radius: 12px; padding: 18px; }
+    .stat-label { display: block; color: #475569; font-size: 13px; margin-bottom: 4px; }
+    .stat-value { display: block; font-size: 26px; font-weight: 800; letter-spacing: -.03em; overflow-wrap: anywhere; }
+    .stat-value.small { font-size: 17px; padding-top: 5px; }
+    .form-grid { display: grid; grid-template-columns: minmax(0, 1fr) 170px; gap: 14px; }
+    .hint { margin: 7px 0 0; color: var(--muted); font-size: 12px; }
+    .primary {
+      border: 0;
+      color: white;
+      background: var(--accent);
+      padding: 12px 22px;
+      border-radius: 10px;
+      min-height: 48px;
+      font: inherit;
+      font-weight: 750;
+      cursor: pointer;
+    }
+    .primary:hover { background: #1d4ed8; }
+    .form-actions { margin-top: 20px; }
+    .message { min-height: 22px; margin: 12px 0 0; font-size: 14px; font-weight: 600; }
+    .message.error { color: var(--danger); }
+    .message.success { color: var(--success); }
+    .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+    .section-head h2 { margin-bottom: 14px; }
+    .section-head span { color: var(--muted); font-size: 13px; }
+    .records { list-style: none; margin: 0; padding: 0; }
+    .record {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 16px 0;
+      border-top: 1px solid var(--line);
+    }
+    .record-main { min-width: 0; }
+    .record-subject { margin: 0 0 3px; font-size: 16px; font-weight: 750; overflow-wrap: anywhere; }
+    .record-info { color: var(--muted); font-size: 13px; }
+    .record-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+    .minutes { font-weight: 800; white-space: nowrap; }
+    .delete {
+      min-height: 44px;
+      padding: 8px 14px;
+      border: 1px solid #fecdd3;
+      border-radius: 9px;
+      color: var(--danger);
+      background: #fff1f2;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .delete:hover { background: #ffe4e6; }
+    .empty { padding: 26px 4px 10px; text-align: center; color: var(--muted); }
+    footer { margin-top: 18px; text-align: center; color: var(--muted); font-size: 13px; }
+    @media (max-width: 560px) {
+      .container { padding: 24px 14px 44px; }
+      .card { padding: 18px; border-radius: 14px; }
+      .date-row { max-width: none; }
+      .form-grid { grid-template-columns: 1fr; }
+      .summary { gap: 10px; }
+      .stat { padding: 14px; }
+      .stat-value { font-size: 22px; }
+      .stat-value.small { font-size: 15px; }
+      .primary { width: 100%; }
+      .record { align-items: flex-start; }
+      .record-right { gap: 8px; }
+      .minutes { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <p class="eyebrow">STUDY LOG</p>
+      <h1>오늘의 공부 기록</h1>
+      <p class="subtitle">공부한 과목과 시간을 간단하게 기록해 보세요.</p>
+    </header>
+
+    <section class="card" aria-labelledby="date-title">
+      <h2 id="date-title">날짜와 공부 현황</h2>
+      <div class="date-row">
+        <label for="study-date">날짜 선택</label>
+        <input id="study-date" type="date" required>
+      </div>
+      <div class="summary">
+        <div class="stat">
+          <span class="stat-label">총 공부 시간</span>
+          <strong id="total-time" class="stat-value" aria-live="polite">0분</strong>
+        </div>
+        <div class="stat">
+          <span class="stat-label">선택한 날짜</span>
+          <strong id="selected-date" class="stat-value small">-</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="form-title">
+      <h2 id="form-title">공부 기록 추가</h2>
+      <form id="study-form" novalidate>
+        <div class="form-grid">
+          <div>
+            <label for="subject">과목</label>
+            <input id="subject" type="text" placeholder="예: 파이썬 기초" autocomplete="off" required>
+          </div>
+          <div>
+            <label for="minutes">공부 시간 (분)</label>
+            <input id="minutes" type="number" min="1" max="1440" step="1" placeholder="예: 45" inputmode="numeric" required>
+            <p class="hint">1~1440분 사이의 정수</p>
+          </div>
+        </div>
+        <div class="form-actions"><button class="primary" type="submit">기록 저장하기</button></div>
+        <p id="message" class="message" role="status" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="records-title">
+      <div class="section-head">
+        <h2 id="records-title">공부 기록 목록</h2>
+        <span id="record-count">0개</span>
+      </div>
+      <ul id="record-list" class="records"></ul>
+      <p id="empty-message" class="empty">아직 저장된 기록이 없습니다.</p>
+    </section>
+
+    <footer>기록은 현재 브라우저에만 저장됩니다.</footer>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'study-log-records-v1';
+    const dateInput = document.getElementById('study-date');
+    const subjectInput = document.getElementById('subject');
+    const minutesInput = document.getElementById('minutes');
+    const form = document.getElementById('study-form');
+    const message = document.getElementById('message');
+    const recordList = document.getElementById('record-list');
+    const emptyMessage = document.getElementById('empty-message');
+    const totalTime = document.getElementById('total-time');
+    const selectedDate = document.getElementById('selected-date');
+    const recordCount = document.getElementById('record-count');
+
+    // 한국을 포함한 사용자 기기의 '현지 날짜'를 사용합니다.
+    function getLocalToday() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // 브라우저에 저장한 기록을 읽습니다.
+    function loadRecords() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        if (!Array.isArray(saved)) return [];
+        return saved.filter(item =>
+          item && typeof item.id === 'string' &&
+          typeof item.date === 'string' &&
+          typeof item.subject === 'string' &&
+          Number.isInteger(item.minutes) && item.minutes >= 1 && item.minutes <= 1440
+        );
+      } catch (error) {
+        return [];
+      }
+    }
+
+    let records = loadRecords();
+    dateInput.value = getLocalToday();
+
+    function showMessage(text, type = '') {
+      message.textContent = text;
+      message.className = `message ${type}`;
+    }
+
+    function formatMinutes(minutes) {
+      if (minutes < 60) return `${minutes}분`;
+      const hours = Math.floor(minutes / 60);
+      const rest = minutes % 60;
+      return rest === 0 ? `${hours}시간` : `${hours}시간 ${rest}분`;
+    }
+
+    // 선택한 날짜에 해당하는 기록만 보여주고 합계를 다시 계산합니다.
+    function render() {
+      const date = dateInput.value;
+      const dayRecords = records.filter(record => record.date === date);
+      const total = dayRecords.reduce((sum, record) => sum + record.minutes, 0);
+
+      selectedDate.textContent = date || '날짜 미선택';
+      totalTime.textContent = formatMinutes(total);
+      recordCount.textContent = `${dayRecords.length}개`;
+      emptyMessage.hidden = dayRecords.length > 0;
+      emptyMessage.textContent = date
+        ? '이 날짜에는 아직 저장된 기록이 없습니다.'
+        : '날짜를 먼저 선택해 주세요.';
+      recordList.replaceChildren();
+
+      for (const record of dayRecords) {
+        const item = document.createElement('li');
+        item.className = 'record';
+
+        const details = document.createElement('div');
+        details.className = 'record-main';
+
+        const subject = document.createElement('p');
+        subject.className = 'record-subject';
+        subject.textContent = record.subject;
+
+        const dateText = document.createElement('span');
+        dateText.className = 'record-info';
+        dateText.textContent = record.date;
+
+        details.append(subject, dateText);
+
+        const right = document.createElement('div');
+        right.className = 'record-right';
+
+        const timeText = document.createElement('span');
+        timeText.className = 'minutes';
+        timeText.textContent = `${record.minutes}분`;
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'delete';
+        deleteButton.textContent = '삭제';
+        deleteButton.setAttribute('aria-label', `${record.subject} ${record.minutes}분 기록 삭제`);
+        deleteButton.addEventListener('click', () => deleteRecord(record.id));
+
+        right.append(timeText, deleteButton);
+        item.append(details, right);
+        recordList.append(item);
+      }
+    }
+
+    // 기록을 삭제하면 저장소와 화면을 함께 갱신합니다.
+    function deleteRecord(id) {
+      if (!window.confirm('이 공부 기록을 삭제할까요?')) return;
+      const nextRecords = records.filter(record => record.id !== id);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords));
+        records = nextRecords;
+        render();
+        showMessage('기록을 삭제했습니다.', 'success');
+      } catch (error) {
+        showMessage('삭제 내용을 저장하지 못했습니다. 브라우저 저장 공간을 확인해 주세요.', 'error');
+      }
+    }
+
+    // 저장 버튼을 누르면 입력값을 확인한 후 기록합니다.
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+
+      const date = dateInput.value;
+      const subject = subjectInput.value.trim();
+      const rawMinutes = minutesInput.value.trim();
+
+      if (!date) {
+        showMessage('먼저 공부한 날짜를 선택해 주세요.', 'error');
+        dateInput.focus();
+        return;
+      }
+      if (!subject) {
+        showMessage('과목을 입력해 주세요. 예: 자바스크립트', 'error');
+        subjectInput.focus();
+        return;
+      }
+      if (!/^\d+$/.test(rawMinutes)) {
+        showMessage('공부 시간은 1~1440 사이의 정수로 입력해 주세요.', 'error');
+        minutesInput.focus();
+        return;
+      }
+
+      const minutes = Number(rawMinutes);
+      if (!Number.isInteger(minutes) || minutes < 1 || minutes > 1440) {
+        showMessage('공부 시간은 최소 1분, 최대 1440분까지 입력할 수 있습니다.', 'error');
+        minutesInput.focus();
+        return;
+      }
+
+      const record = {
+        id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        date,
+        subject,
+        minutes
+      };
+      const nextRecords = [record, ...records];
+
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(nextRecords));
+        records = nextRecords;
+        subjectInput.value = '';
+        minutesInput.value = '';
+        render();
+        showMessage('공부 기록을 저장했습니다!', 'success');
+        subjectInput.focus();
+      } catch (error) {
+        showMessage('기록을 저장하지 못했습니다. 브라우저 저장 설정을 확인해 주세요.', 'error');
+      }
+    });
+
+    dateInput.addEventListener('change', () => {
+      render();
+      showMessage('');
+    });
+
+    render();
+  </script>
+</body>
+</html>
